@@ -46,63 +46,7 @@ public class CLI {
                 if (command instanceof ExitCommand){
                     running = false;
                 }
-/*
-                switch (commandName) {
-                    case "help":
-                        helpCommand.execute(registry);
-                        break;
 
-                    case "exit":
-                        running = exitCommand.execute();
-                        break;
-
-                    case "file_add":
-                        fileAddCommand.execute(args, manager, scanner);
-                        break;
-
-                    case "file_list":
-                        fileListCommand.execute(args, manager);
-                        break;
-
-                    case "file_show":
-                        fileShowCommand.execute(args, manager);
-                        break;
-
-                    case "file_link":
-                        fileLinkCommand.execute(args, manager, scanner);
-                        break;
-
-                    case "file_links":
-                        fileLinksCommand.execute(args, manager);
-                        break;
-
-                    case "obj_files":
-                        objFilesCommand.execute(args, manager);
-                        break;
-
-                    case "file_update":
-                        fileUpdateCommand.execute(args, manager);
-                        break;
-
-                    case "file_delete":
-                        fileDeleteCommand.execute(args, manager);
-                        break;
-
-                    case "file_unlink":
-                        fileUnlinkCommand.execute(args, manager);
-                        break;
-
-                    case "file_export_meta":
-                        fileExportMetaCommand.execute(args, manager);
-                        break;
-
-                    default:
-                        System.out.println("Ошибка: неизвестная команда");
-                        break;
-                        }
-
-
- */
 
 
             } catch (IllegalArgumentException e) {

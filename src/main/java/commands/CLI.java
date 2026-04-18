@@ -37,11 +37,10 @@ public class CLI {
 
                 Command command = registry.getCommand(commandName);
 
-                try {
-                    command.execute(args);
-                }catch (Exception e){
-                    System.out.println("Возможно вы неправильно написали имя команды");
-                }
+                
+
+                command.execute(args);
+
 
                 if (command instanceof ExitCommand){
                     running = false;

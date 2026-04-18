@@ -17,12 +17,15 @@ public class FileShowCommand implements Command {
 
         long fileId = Long.parseLong(args[1]);
         FileMeta file = manager.getFileById(fileId);
-
-        System.out.println("File #" + file.getId());
-        System.out.println("name: " + file.getFileName());
-        System.out.println("mime: " + file.getMimeType());
-        System.out.println("size: " + file.getSizeBytes());
-        System.out.println("status: " + file.getStatus());
+        try {
+            System.out.println("File #" + file.getId());
+            System.out.println("name: " + file.getFileName());
+            System.out.println("mime: " + file.getMimeType());
+            System.out.println("size: " + file.getSizeBytes());
+            System.out.println("status: " + file.getStatus());
+        }catch(Exception e){
+            System.out.println("Такого файла ещё/уже нет");
+        }
     }
     public String description(){
         return "показать файл по id";

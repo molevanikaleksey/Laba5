@@ -1,4 +1,5 @@
 package commands;
+import repository.FileMetaRepository;
 import service.FilleManager;
 import domain.FileMeta;
 
@@ -6,8 +7,9 @@ import java.util.List;
 
 public class FileListCommand implements Command{
     FilleManager filleManager;
+    FileMetaRepository fileMetaRepository;
     public FileListCommand(FilleManager filleManager){
-        this.filleManager = new FilleManager();
+        this.filleManager = new FilleManager(fileMetaRepository);
     }
     @Override
     public void execute(String[] args) {

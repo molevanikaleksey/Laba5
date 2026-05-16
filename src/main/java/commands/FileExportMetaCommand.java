@@ -1,11 +1,13 @@
 package commands;
+import repository.FileMetaRepository;
 import service.FilleManager;
 import domain.FileMeta;
 
 public class FileExportMetaCommand implements Command{
     FilleManager manager;
+    FileMetaRepository fileMetaRepository;
     public FileExportMetaCommand(FilleManager filleManager){
-        this.manager = new FilleManager();
+        this.manager = new FilleManager(fileMetaRepository);
     }
     @Override
     public void execute(String[] args) {

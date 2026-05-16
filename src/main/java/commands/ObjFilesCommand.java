@@ -1,5 +1,6 @@
 package commands;
 import domain.AttachmentTargetType;
+import repository.FileMetaRepository;
 import service.FilleManager;
 import domain.FileMeta;
 
@@ -7,8 +8,9 @@ import java.util.List;
 
 public class ObjFilesCommand implements Command{
     FilleManager manager;
+    FileMetaRepository fileMetaRepository;
     public ObjFilesCommand(FilleManager filleManager){
-        this.manager = new FilleManager();
+        this.manager = new FilleManager(fileMetaRepository);
     }
     @Override
     public void execute(String[] args) {

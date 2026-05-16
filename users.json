@@ -1,0 +1,38 @@
+[
+  {
+    "UserId": 1,
+    "login": "lala",
+    "password": "3f29e1b2b05f8371595dc761fed8e8b37544b38d56dfce81a551b46c82f2f56b",
+    "createdAt": "2026-05-15T20:33:14.426806Z"
+  },
+  {
+    "UserId": 2,
+    "login": "lak",
+    "password": "f3c95895938a6c5aeae7a075f584afb12429d1025a506e2b49c1deeb8dbaaea6",
+    "createdAt": "2026-05-15T20:33:45.946256Z"
+  },
+  {
+    "UserId": 3,
+    "login": "lili",
+    "password": "6c1ccd1f20742182387027bb4b72c4bfe4ca7e9247af5e7c0f1f8ce0f236724e",
+    "createdAt": "2026-05-15T20:34:25.889427Z"
+  },
+  {
+    "UserId": 4,
+    "login": "lalala",
+    "password": "3f29e1b2b05f8371595dc761fed8e8b37544b38d56dfce81a551b46c82f2f56b",
+    "createdAt": "2026-05-15T20:43:23.755548Z"
+  },
+  {
+    "UserId": 5,
+    "login": "12",
+    "password": "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5",
+    "createdAt": "2026-05-15T20:57:14.131326Z"
+  },
+  {
+    "UserId": 6,
+    "login": "lal",
+    "password": "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5",
+    "createdAt": "2026-05-15T21:02:11.069190Z"
+  }
+]

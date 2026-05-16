@@ -1,12 +1,14 @@
 package commands;
 
+import repository.FileMetaRepository;
 import service.FilleManager;
 import domain.FileMeta;
 
 public class FileShowCommand implements Command {
     FilleManager manager;
+    FileMetaRepository fileMetaRepository;
     public FileShowCommand(FilleManager filleManager){
-        this.manager = new FilleManager();
+        this.manager = new FilleManager(fileMetaRepository);
     }
 
     @Override

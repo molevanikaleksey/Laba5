@@ -1,7 +1,9 @@
 package commands;
 import domain.AttachmentTargetType;
+import repository.FileMetaRepository;
 import service.AttachmentManager;
 import service.FilleManager;
+import service.SessionService;
 
 import java.util.Scanner;
 
@@ -9,17 +11,23 @@ public class FileLinkCommand implements Command{
     AttachmentManager manager;
     Scanner scanner;
     FilleManager filleManager;
+    SessionService sessionService;
+    FileMetaRepository fileMetaRepository;
 
     //TreeMap<Long, FileMeta> files = filleManager.getTreeMap();
-    public FileLinkCommand(AttachmentManager manager, Scanner scanner, FilleManager filleManager){
+    public FileLinkCommand(AttachmentManager manager, Scanner scanner, FilleManager filleManager, SessionService sessionService){
         this.manager = new AttachmentManager();
         this.scanner = new Scanner(System.in);
-        this.filleManager = new FilleManager();
+        this.filleManager = new FilleManager(fileMetaRepository);
+        this.sessionService = sessionService;
 
     }
 
     @Override
     public void execute(String[] args) {
+        if (!sessionService.isAuthorized()) {
+            throw new IllegalStateException("Ошибка: сначала выполните login");
+        }
         if (args.length != 2) {
             throw new IllegalArgumentException("Ошибка: используйте file_link <file_id>");
         }

@@ -32,7 +32,7 @@ public class FileUpdateCommand implements Command{
         System.out.print("Впишите новое описание: ");
         String newDescription = scanner.nextLine().trim();
 
-        manager.updateFileDescription(fileId, newDescription);
+        manager.updateFileDescription(fileId, newDescription, sessionService.getCurrentUserId());
         System.out.println("OK");
     }
     public String description(){

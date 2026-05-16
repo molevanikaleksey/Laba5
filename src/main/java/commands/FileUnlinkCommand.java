@@ -23,7 +23,7 @@ public class FileUnlinkCommand implements Command {
                 AttachmentTargetType targetType = AttachmentTargetType.valueOf(args[2].toUpperCase());
                 long targetId = Long.parseLong(args[3]);
 
-                manager.unlinkFile(fileId, targetType, targetId);
+                manager.unlinkFile(fileId, targetType, targetId, sessionService.getCurrentUserId());
                 System.out.println("OK unlinked");
             }
         }catch (IllegalArgumentException e){

@@ -35,7 +35,7 @@ public final class AttachmentLink {
         return id;
     }
 
-    public long getFileId() {
+    public Long getFileId() {
         return fileId;
     }
 
@@ -43,7 +43,7 @@ public final class AttachmentLink {
         return targetType;
     }
 
-    public long getTargetId() {
+    public Long getTargetId() {
         return targetId;
     }
 
@@ -83,5 +83,13 @@ public final class AttachmentLink {
     }
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
     }
 }

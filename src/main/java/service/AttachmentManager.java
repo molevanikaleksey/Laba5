@@ -16,6 +16,8 @@ import static service.FilleManager.files;
 public class AttachmentManager {
 
     public static final TreeMap<Long, AttachmentLink> attachmentLinks = new TreeMap<>();
+    FilleManager filleManager = new FilleManager();
+    FileMeta fileMeta = new FileMeta();
     public void addAttachmentLink(Long fileId, AttachmentTargetType targetType, Long targetid) {
         AttachmentLink attLink = new AttachmentLink();
         for (Long i : attachmentLinks.keySet()) {
@@ -55,26 +57,32 @@ public class AttachmentManager {
         fileMeta.setStatus(FileStatus.DELETED);
     }
 
-    public void unlinkFile(long fileId, AttachmentTargetType targetType, long targetId) {
-        getFileById(fileId);
-
-        long foundLinkId = -1;
-
+    public void unlinkFile(
+            Long fileId,
+            AttachmentTargetType targetType,
+            Long targetId,
+            Long currentUserId
+    ) {
+        AttachmentLink found = null;
 
         for (AttachmentLink link : attachmentLinks.values()) {
-            if (link.getFileId() == fileId
+            if (link.getFileId().equals(fileId)
                     && link.getTargetType() == targetType
-                    && link.getTargetId() == targetId) {
-                foundLinkId = link.getId();
+                    && link.getTargetId().equals(targetId)) {
+                found = link;
                 break;
             }
         }
 
-        if (foundLinkId == -1) {
+        if (found == null) {
             throw new IllegalArgumentException("Ошибка: связь не найдена");
         }
 
-        attachmentLinks.remove(foundLinkId);
+        if (!found.getOwnerId().equals(currentUserId)) {
+            throw new IllegalArgumentException("Ошибка: у вас нет прав на удаление этой связи");
+        }
+
+        attachmentLinks.remove(found.getId());
     }
     public ArrayList<AttachmentLink> getAllLinksForSave(){
         return new ArrayList<>(attachmentLinks.values());
@@ -98,31 +106,30 @@ public class AttachmentManager {
                 "owner: " + attachmentLink.getOwnerUsername() + "\n" +
                 "createdAt: " + attachmentLink.getCreatedAt();
     }
-    public AttachmentLink linkFile(long fileId, AttachmentTargetType targetType, long targetId) {
-        if (fileId < 0) {
-            throw new IllegalArgumentException("Ошибка: file_id должен быть больше 0");
+    public void linkFile(Long fileId, AttachmentTargetType targetType, Long targetId, Long ownerId) {
+
+        if (fileMeta.getOwnerId() == null) {
+            throw new IllegalArgumentException(
+                    "Ошибка: у файла нет владельца. Создайте файл заново или загрузите корректный JSON."
+            );
         }
 
-        if (targetType == null) {
-            throw new IllegalArgumentException("Ошибка: тип объекта не может быть пустым");
+        if (!fileMeta.getOwnerId().equals(ownerId)) {
+            throw new IllegalArgumentException("Ошибка: у вас нет прав на изменение этого файла");
         }
 
-        if (targetId < 0) {
-            throw new IllegalArgumentException("Ошибка: ID объекта должен быть больше 0");
-        }
+        AttachmentLink link = new AttachmentLink();
 
-        AttachmentLink link = new AttachmentLink(
-                Generator.getAttNextId(),
-                fileId,
-                targetType,
-                targetId,
-                "SYSTEM",
-                Instant.now(),
-                SessionService.getCurrentUserId()
-        );
+        Long id = Generator.getAttNextId();
 
-        attachmentLinks.put(link.getId(), link);
+        link.setId(id);
+        link.setFileId(fileId);
+        link.setTargetType(targetType);
+        link.setTargetId(targetId);
+        link.setOwnerId(ownerId);
+        link.setCreatedAt(Instant.now());
 
-        return link;
+        attachmentLinks.put(id, link);
     }
+
 }

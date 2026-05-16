@@ -2,11 +2,12 @@ package ui;
 
 import domain.FileMeta;
 import domain.FileStatus;
-import service.AttachmentManager;
+import persistence.JsonUserRepository;
+import security.PasswordHash;
+import service.*;
 import javafx.application.Platform;
 import persistence.FileStorage;
 import service.AttachmentManager;
-import service.FilleManager;
 import domain.AttachmentLink;
 import domain.AttachmentTargetType;
 import javafx.application.Application;
@@ -18,27 +19,112 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import service.Generator;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class FileMasterDetailApp extends Application {
 
-    private final FilleManager fileManager = new FilleManager();
-    private final AttachmentManager attachmentManager = new AttachmentManager();
-    private final FileStorage storage = new FileStorage();
+    private FilleManager fileManager;
+    private AttachmentManager attachmentManager;
+    private FileStorage storage;
+
+    private AuthService authService;
+    private SessionService sessionService;
     private ProgressIndicator progressIndicator;
     private TableView<AttachmentLink> linkTable;
 
     private TableView<FileMeta> fileTable;
     private TextArea detailsArea;
+    private Button updateButton;
+    private Button deleteButton;
+    private Button linkButton;
+    private Button unlinkButton;
 
     public static void main(String[] args) {
         launch(args);
     }
-
     @Override
     public void start(Stage stage) {
+        initJsonServices();
+        showLoginWindow(stage);
+    }
+    private void showLoginWindow(Stage stage) {
+        TextField loginField = new TextField();
+        loginField.setPromptText("Login");
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Password");
+
+        Button loginButton = new Button("Login");
+        Button registerButton = new Button("Register");
+
+        Label messageLabel = new Label();
+
+        loginButton.setOnAction(event -> {
+            try {
+                authService.login(
+                        loginField.getText(),
+                        passwordField.getText()
+                );
+
+                showMainWindow(stage);
+
+            } catch (Exception e) {
+                messageLabel.setText(e.getMessage());
+            }
+        });
+
+        registerButton.setOnAction(event -> {
+            try {
+                authService.register(
+                        loginField.getText(),
+                        passwordField.getText()
+                );
+
+                messageLabel.setText("OK registered");
+
+            } catch (Exception e) {
+                messageLabel.setText(e.getMessage());
+            }
+        });
+
+        VBox root = new VBox(
+                10,
+                new Label("Authorization"),
+                loginField,
+                passwordField,
+                loginButton,
+                registerButton,
+                messageLabel
+        );
+
+        root.setPadding(new Insets(20));
+
+        stage.setTitle("Login");
+        stage.setScene(new Scene(root, 300, 250));
+        stage.show();
+    }
+    private void initJsonServices() {
+        fileManager = new FilleManager();
+        attachmentManager = new AttachmentManager();
+
+        UserRepository userRepository =
+                new JsonUserRepository(Path.of("users.json"));
+
+        PasswordHash passwordHash = new PasswordHash();
+        sessionService = new SessionService();
+
+        authService = new AuthService(
+                userRepository,
+                passwordHash,
+                sessionService
+        );
+
+        storage = new FileStorage();
+    }
+
+    public void showMainWindow(Stage stage) {
         fileTable = createFileTable();
         detailsArea = createDetailsArea();
         linkTable = createLinkTable();
@@ -48,7 +134,15 @@ public class FileMasterDetailApp extends Application {
                 .addListener((observable, oldFile, newFile) -> {
                     if (newFile != null) {
                         linkTable.getSelectionModel().clearSelection();
+
                         showFileDetails(newFile);
+                        updateButtonsAccess(newFile);
+                    } else {
+                        detailsArea.clear();
+
+                        updateButton.setDisable(true);
+                        deleteButton.setDisable(true);
+                        linkButton.setDisable(true);
                     }
                 });
 
@@ -57,7 +151,11 @@ public class FileMasterDetailApp extends Application {
                 .addListener((observable, oldLink, newLink) -> {
                     if (newLink != null) {
                         fileTable.getSelectionModel().clearSelection();
+
                         showLinkDetails(newLink);
+                        updateButtonsAccessForLink(newLink);
+                    } else {
+                        unlinkButton.setDisable(true);
                     }
                 });
         progressIndicator = new ProgressIndicator();
@@ -79,6 +177,18 @@ public class FileMasterDetailApp extends Application {
     }
 
     private VBox createLeftPanel() {
+        Label accountLabel = new Label(
+                "Account: " + sessionService.getCurrentUser().getLogin()
+        );
+
+        Button logoutButton = new Button("Logout");
+
+        logoutButton.setOnAction(event -> {
+            sessionService.logout();
+            showLoginWindow((Stage) fileTable.getScene().getWindow());
+        });
+
+        HBox accountBox = new HBox(10, accountLabel, logoutButton);
         Label filesTitle = new Label("Files");
         Label linksTitle = new Label("Attachment links");
 
@@ -88,17 +198,20 @@ public class FileMasterDetailApp extends Application {
         Button addButton = new Button("Add file");
         addButton.setOnAction(event -> addFile());
 
-        Button updateButton = new Button("Update description");
+        updateButton = new Button("Update description");
+        deleteButton = new Button("Delete file");
+        linkButton = new Button("Link");
+        unlinkButton = new Button("Unlink");
+
         updateButton.setOnAction(event -> updateSelectedDescription());
-
-        Button deleteButton = new Button("Delete file");
         deleteButton.setOnAction(event -> deleteSelectedFile());
-
-        Button linkButton = new Button("Link");
         linkButton.setOnAction(event -> linkSelectedFile());
-
-        Button unlinkButton = new Button("Unlink");
         unlinkButton.setOnAction(event -> unlinkSelectedLink());
+
+        updateButton.setDisable(true);
+        deleteButton.setDisable(true);
+        linkButton.setDisable(true);
+        unlinkButton.setDisable(true);
 
         Button saveButton = new Button("Save");
         saveButton.setOnAction(event -> saveData());
@@ -112,13 +225,15 @@ public class FileMasterDetailApp extends Application {
 
         VBox panel = new VBox(
                 10,
+                accountBox,
                 filesTitle,
                 fileTable,
                 fileButtons,
                 linksTitle,
                 linkTable,
                 linkButtons,
-                storageButtons
+                storageButtons,
+                progressIndicator
         );
 
         panel.setPrefWidth(650);
@@ -172,10 +287,13 @@ public class FileMasterDetailApp extends Application {
             try {
                 long targetId = Long.parseLong(input.targetId());
 
+                Long ownerId = sessionService.getCurrentUser().getUserId();
+
                 attachmentManager.linkFile(
                         selectedFile.getId(),
                         input.targetType(),
-                        targetId
+                        targetId,
+                        ownerId
                 );
 
                 showInfo("Связь добавлена. Нажмите Refresh, чтобы обновить таблицу ссылок.");
@@ -199,7 +317,8 @@ public class FileMasterDetailApp extends Application {
             attachmentManager.unlinkFile(
                     selectedLink.getFileId(),
                     selectedLink.getTargetType(),
-                    selectedLink.getTargetId()
+                    selectedLink.getTargetId(),
+                    selectedLink.getOwnerId()
             );
 
             showInfo("Связь удалена. Нажмите Refresh, чтобы обновить таблицу ссылок.");
@@ -324,7 +443,7 @@ public class FileMasterDetailApp extends Application {
                         "size: " + file.getSizeBytes() + "\n" +
                         "description: " + file.getDescription() + "\n" +
                         "status: " + file.getStatus() + "\n" +
-                        "owner: " + file.getOwnerUsername() + "\n" +
+                        "owner: " + file.getOwnerId() + "\n" +
                         "createdAt: " + file.getCreatedAt() + "\n" +
                         "updatedAt: " + file.getUpdatedAt();
 
@@ -412,12 +531,18 @@ public class FileMasterDetailApp extends Application {
             try {
                 long size = Long.parseLong(input.sizeBytes());
 
+                long ownerId = sessionService.getCurrentUser().getUserId();
+
                 fileManager.addFile(
                         input.fileName(),
                         input.mimeType(),
                         size,
-                        input.description()
+                        input.description(),
+                        ownerId
+
                 );
+
+                refreshAll();
 
                 showInfo("Файл добавлен");
             } catch (NumberFormatException e) {
@@ -443,7 +568,13 @@ public class FileMasterDetailApp extends Application {
 
         dialog.showAndWait().ifPresent(newDescription -> {
             try {
-                fileManager.updateFileDescription(selected.getId(), newDescription);
+                Long currentUserId = sessionService.getCurrentUser().getUserId();
+
+                fileManager.updateFileDescription(
+                        selected.getId(),
+                        newDescription,
+                        currentUserId
+                );
 
 
                 FileMeta updated = fileManager.getFileById(selected.getId());
@@ -465,7 +596,12 @@ public class FileMasterDetailApp extends Application {
         }
 
         try {
-            fileManager.deleteFile(selected.getId());
+            Long currentUserId = sessionService.getCurrentUser().getUserId();
+
+            fileManager.deleteFile(
+                    selected.getId(),
+                    currentUserId
+            );
 
             detailsArea.clear();
             showInfo("Файл удалён");
@@ -565,6 +701,27 @@ public class FileMasterDetailApp extends Application {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    private void updateButtonsAccess(FileMeta file) {
+        Long currentUserId = sessionService.getCurrentUser().getUserId();
+
+        boolean isOwner = file.getOwnerId() != null
+                && file.getOwnerId().equals(currentUserId);
+
+        updateButton.setDisable(!isOwner);
+        deleteButton.setDisable(!isOwner);
+        linkButton.setDisable(!isOwner);
+        unlinkButton.setDisable(true);
+    }
+    private void updateButtonsAccessForLink(AttachmentLink link) {
+        Long currentUserId = sessionService.getCurrentUser().getUserId();
+
+        boolean isOwner = link.getOwnerId().equals(currentUserId);
+
+        updateButton.setDisable(true);
+        deleteButton.setDisable(true);
+        linkButton.setDisable(true);
+        unlinkButton.setDisable(!isOwner);
     }
 
     private record FileInput(

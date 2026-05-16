@@ -24,7 +24,7 @@ public class FileDeleteCommand implements Command {
         }
 
         long fileId = Long.parseLong(args[1]);
-        filleManager.deleteFile(fileId);
+        filleManager.deleteFile(fileId, sessionService.getCurrentUserId());
         attachmentManager.setStatusDel(fileId);
         System.out.println("OK status=DELETED");
     }

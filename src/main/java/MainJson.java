@@ -1,5 +1,6 @@
 import commands.CLI;
 import persistence.JsonUserRepository;
+import repository.AttachmentLinkRepository;
 import repository.FileMetaRepository;
 import repository.UserRepository;
 import security.PasswordHash;
@@ -11,7 +12,9 @@ public class MainJson {
 
     public static void main(String[] args) {
         FileMetaRepository fileMetaRepository;
-        AttachmentManager attachmentManager = new AttachmentManager();
+        AttachmentLinkRepository attachmentLinkRepository;
+        FilleManager filleManager;
+        //AttachmentManager attachmentManager = new AttachmentManager(attachmentLinkRepository, filleManager);
         //FilleManager filleManager = new FilleManager(fileMetaRepository);
 
         UserRepository userRepository =

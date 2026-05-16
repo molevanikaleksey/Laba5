@@ -1,13 +1,17 @@
 package commands;
 import domain.AttachmentTargetType;
+import repository.AttachmentLinkRepository;
 import service.AttachmentManager;
+import service.FilleManager;
 import service.SessionService;
 
 public class FileUnlinkCommand implements Command {
     AttachmentManager manager;
     SessionService sessionService;
+    AttachmentLinkRepository attachmentLinkRepository;
+    FilleManager filleManager;
     public FileUnlinkCommand(AttachmentManager manager, SessionService sessionService){
-        this.manager = new AttachmentManager();
+        this.manager = new AttachmentManager(attachmentLinkRepository, filleManager);
         this.sessionService = sessionService;
     }
     @Override

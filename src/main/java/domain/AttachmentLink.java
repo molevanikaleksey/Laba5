@@ -24,7 +24,7 @@ public final class AttachmentLink {
         this.setTargetType(targetType);
         this.setTargetId(targetId);
         this.setOwnerUsername(ownerUsername);
-        this.setOwnerUserId(userId);
+        this.setOwnerId(userId);
         this.setCreatedAt(createdAt);
     }
 
@@ -81,7 +81,7 @@ public final class AttachmentLink {
         this.ownerUsername = ownerUsername;
     }
 
-    public void setOwnerUserId(Long ownerUsername) {
+    public void setOwnerId(Long ownerUsername) {
         this.ownerId = ownerId;
     }
     public void setCreatedAt(Instant createdAt) {

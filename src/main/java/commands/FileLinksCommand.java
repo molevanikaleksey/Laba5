@@ -1,5 +1,6 @@
 package commands;
 import domain.FileStatus;
+import repository.AttachmentLinkRepository;
 import repository.FileMetaRepository;
 import service.AttachmentManager;
 import service.FilleManager;
@@ -8,8 +9,9 @@ public class FileLinksCommand implements Command{
     public AttachmentManager manager;
     public FilleManager filleManager;
     FileMetaRepository fileMetaRepository;
+    AttachmentLinkRepository attachmentLinkRepository;
     public FileLinksCommand(AttachmentManager attachmentManager, FilleManager filleManager){
-        this.manager = new AttachmentManager();
+        this.manager = new AttachmentManager(attachmentLinkRepository, filleManager);
         this.filleManager = new FilleManager(fileMetaRepository);
     }
     @Override

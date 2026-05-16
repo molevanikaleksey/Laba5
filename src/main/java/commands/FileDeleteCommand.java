@@ -1,5 +1,6 @@
 package commands;
 
+import repository.AttachmentLinkRepository;
 import repository.FileMetaRepository;
 import service.FilleManager;
 import service.AttachmentManager;
@@ -10,8 +11,9 @@ public class FileDeleteCommand implements Command {
     FilleManager filleManager;
     SessionService sessionService;
     FileMetaRepository fileMetaRepository;
+    AttachmentLinkRepository attachmentLinkRepository;
     public FileDeleteCommand(AttachmentManager attachmentManager, FilleManager filleManager, SessionService sessionService){
-        this.attachmentManager = new AttachmentManager();
+        this.attachmentManager = new AttachmentManager(attachmentLinkRepository, filleManager);
         this.filleManager = new FilleManager(fileMetaRepository);
         this.sessionService = sessionService;
     }

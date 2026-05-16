@@ -1,5 +1,6 @@
 package commands;
 import domain.AttachmentTargetType;
+import repository.AttachmentLinkRepository;
 import repository.FileMetaRepository;
 import service.AttachmentManager;
 import service.FilleManager;
@@ -13,10 +14,11 @@ public class FileLinkCommand implements Command{
     FilleManager filleManager;
     SessionService sessionService;
     FileMetaRepository fileMetaRepository;
+    AttachmentLinkRepository attachmentLinkRepository;
 
     //TreeMap<Long, FileMeta> files = filleManager.getTreeMap();
     public FileLinkCommand(AttachmentManager manager, Scanner scanner, FilleManager filleManager, SessionService sessionService){
-        this.manager = new AttachmentManager();
+        this.manager = new AttachmentManager(attachmentLinkRepository, filleManager);
         this.scanner = new Scanner(System.in);
         this.filleManager = new FilleManager(fileMetaRepository);
         this.sessionService = sessionService;
@@ -67,7 +69,7 @@ public class FileLinkCommand implements Command{
 
 
 
-        manager.addAttachmentLink(fileId, targetType, targetId);
+        manager.linkFile(fileId, targetType, targetId, sessionService.getCurrentUserId());
         System.out.println("OK linked");
     }
     public String description(){

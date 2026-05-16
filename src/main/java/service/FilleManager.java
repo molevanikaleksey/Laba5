@@ -103,20 +103,30 @@ public class FilleManager {
 
     public void updateFileDescription(long fileId, String description, long currentUserId) {
         FileMeta fileMeta = getFileById(fileId);
-        checkOwner(fileMeta, sessionService.getCurrentUserId());
+
+        checkOwner(fileMeta, currentUserId);
+
         fileMeta.setDescription(description);
         fileMeta.setUpdatedAt(Instant.now());
+
+        fileMetaRepository.update(fileMeta);
+        files.put(fileMeta.getId(), fileMeta);
     }
 
     public void deleteFile(long id, long currentUserId) {
         FileMeta fileMeta = getFileById(id);
-        checkOwner(fileMeta, sessionService.getCurrentUserId());
+
+        checkOwner(fileMeta, currentUserId);
 
         if (fileMeta.getStatus() == FileStatus.DELETED) {
             throw new IllegalArgumentException("Ошибка: файл уже удалён");
         }
+
         fileMeta.setStatus(FileStatus.DELETED);
         fileMeta.setUpdatedAt(Instant.now());
+
+        fileMetaRepository.update(fileMeta);
+        files.put(fileMeta.getId(), fileMeta);
     }
     public List<FileMeta> getAllFiles_noerrors() {
         return files.values()

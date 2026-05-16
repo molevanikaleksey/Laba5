@@ -3,6 +3,149 @@ package service;
 import domain.AttachmentLink;
 import domain.AttachmentTargetType;
 import domain.FileMeta;
+import repository.AttachmentLinkRepository;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+
+public class AttachmentManager {
+    private final AttachmentLinkRepository attachmentLinkRepository;
+    private final FilleManager fileManager;
+
+    static final TreeMap<Long, AttachmentLink> attachmentLinks = new TreeMap<>();
+
+    public AttachmentManager(
+            AttachmentLinkRepository attachmentLinkRepository,
+            FilleManager fileManager
+    ) {
+        this.attachmentLinkRepository = attachmentLinkRepository;
+        this.fileManager = fileManager;
+    }
+
+
+    public void loadFromDatabase() {
+        attachmentLinks.clear();
+
+        List<AttachmentLink> loadedLinks = attachmentLinkRepository.findAll();
+
+        for (AttachmentLink link : loadedLinks) {
+            attachmentLinks.put(link.getId(), link);
+        }
+    }
+
+    public AttachmentLink linkFile(
+            long fileId,
+            AttachmentTargetType targetType,
+            long targetId,
+            long ownerId
+    ) {
+        FileMeta file = fileManager.getFileById(fileId);
+
+        if (file.getOwnerId() != ownerId) {
+            throw new IllegalArgumentException("Ошибка: у вас нет прав на изменение этого файла");
+        }
+
+        AttachmentLink link = new AttachmentLink();
+
+        link.setFileId(fileId);
+        link.setTargetType(targetType);
+        link.setTargetId(targetId);
+        link.setOwnerId(ownerId);
+        link.setCreatedAt(Instant.now());
+
+        AttachmentLink savedLink = attachmentLinkRepository.save(link);
+
+        attachmentLinks.put(savedLink.getId(), savedLink);
+        System.out.println("LINK OWNER ID = " + link.getOwnerId());
+
+        return savedLink;
+    }
+
+    public void unlinkFile(
+            long fileId,
+            AttachmentTargetType targetType,
+            long targetId,
+            long currentUserId
+    ) {
+        AttachmentLink foundLink = null;
+
+        for (AttachmentLink link : attachmentLinks.values()) {
+            if (link.getFileId() == fileId
+                    && link.getTargetType() == targetType
+                    && link.getTargetId() == targetId) {
+                foundLink = link;
+                break;
+            }
+        }
+
+        if (foundLink == null) {
+            throw new IllegalArgumentException("Ошибка: связь не найдена");
+        }
+
+        if (foundLink.getOwnerId() != currentUserId) {
+            throw new IllegalArgumentException("Ошибка: у вас нет прав на удаление этой связи");
+        }
+
+        attachmentLinkRepository.delete(fileId, targetType, targetId);
+
+        attachmentLinks.remove(foundLink.getId());
+    }
+    public void addAttachmentLinks(AttachmentLink link) {
+        if (link == null) {
+            throw new IllegalArgumentException("Ошибка: связь не может быть null");
+        }
+
+        if (link.getId() == 0) {
+            throw new IllegalArgumentException("Ошибка: id связи не может быть null");
+        }
+
+        attachmentLinks.put(link.getId(), link);
+    }
+
+    public List<AttachmentLink> getLinksByFileId(long fileId) {
+        List<AttachmentLink> result = new ArrayList<>();
+
+        for (AttachmentLink link : attachmentLinks.values()) {
+            if (link.getFileId() == fileId) {
+                result.add(link);
+            }
+        }
+
+        return result;
+    }
+
+    public List<AttachmentLink> getAllLinksForSave() {
+        return new ArrayList<>(attachmentLinks.values());
+    }
+    public void setStatusDel(long fileId) {
+        List<AttachmentLink> linksToDelete = new ArrayList<>();
+
+        for (AttachmentLink link : attachmentLinks.values()) {
+            if (link.getFileId() == fileId) {
+                linksToDelete.add(link);
+            }
+        }
+
+        for (AttachmentLink link : linksToDelete) {
+            attachmentLinkRepository.delete(
+                    link.getFileId(),
+                    link.getTargetType(),
+                    link.getTargetId()
+            );
+
+            attachmentLinks.remove(link.getId());
+        }
+    }
+}
+/*
+package service;
+
+
+import domain.AttachmentLink;
+import domain.AttachmentTargetType;
+import domain.FileMeta;
 import domain.FileStatus;
 
 import java.time.Instant;
@@ -142,3 +285,5 @@ public class AttachmentManager {
         return link;
     }
 }
+
+ */

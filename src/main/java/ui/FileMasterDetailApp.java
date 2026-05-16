@@ -42,6 +42,9 @@ public class FileMasterDetailApp extends Application {
     private Button deleteButton;
     private Button linkButton;
     private Button unlinkButton;
+    private Label accountLabel;
+    private Button logoutButton;
+    private Stage currentStage;
 
     public static void main(String[] args) {
         launch(args);
@@ -147,13 +150,19 @@ public class FileMasterDetailApp extends Application {
         fileTable = createFileTable();
         detailsArea = createDetailsArea();
         linkTable = createLinkTable();
-
+        this.currentStage = stage;
         fileTable.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((observable, oldFile, newFile) -> {
                     if (newFile != null) {
                         linkTable.getSelectionModel().clearSelection();
                         showFileDetails(newFile);
+                        updateButtonsAccess(newFile);
+                    } else {
+                        detailsArea.clear();
+                        updateButton.setDisable(true);
+                        deleteButton.setDisable(true);
+                        linkButton.setDisable(true);
                     }
                 });
 
@@ -163,8 +172,22 @@ public class FileMasterDetailApp extends Application {
                     if (newLink != null) {
                         fileTable.getSelectionModel().clearSelection();
                         showLinkDetails(newLink);
+                        updateButtonsAccessForLink(newLink);
+                    } else {
+                        unlinkButton.setDisable(true);
                     }
                 });
+/*
+        linkTable.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldLink, newLink) -> {
+                    if (newLink != null) {
+                        fileTable.getSelectionModel().clearSelection();
+                        showLinkDetails(newLink);
+                    }
+                });
+
+ */
         progressIndicator = new ProgressIndicator();
         progressIndicator.setVisible(false);
         progressIndicator.setPrefSize(30, 30);
@@ -184,6 +207,18 @@ public class FileMasterDetailApp extends Application {
     }
 
     private VBox createLeftPanel() {
+        accountLabel = new Label(
+                "Account: " + sessionService.getCurrentUser().getLogin()
+        );
+
+        logoutButton = new Button("Logout");
+
+        logoutButton.setOnAction(event -> {
+            sessionService.logout();
+            showLoginWindow(currentStage);
+        });
+
+        HBox accountBox = new HBox(10, accountLabel, logoutButton);
         Label filesTitle = new Label("Files");
         Label linksTitle = new Label("Attachment links");
 
@@ -230,13 +265,13 @@ public class FileMasterDetailApp extends Application {
 
         VBox panel = new VBox(
                 10,
+                accountBox,
                 filesTitle,
                 fileTable,
                 fileButtons,
                 linksTitle,
                 linkTable,
                 linkButtons
-                //storageButtons
         );
 
         panel.setPrefWidth(650);
@@ -247,8 +282,13 @@ public class FileMasterDetailApp extends Application {
         FileMeta selectedFile = getSelectedFile();
 
         if (selectedFile == null) {
+
             showError("Ошибка: выберите файл, который хотите прикрепить");
+
+            fileTable.refresh();
+
             return;
+
         }
 
         Dialog<LinkInput> dialog = new Dialog<>();
@@ -292,6 +332,7 @@ public class FileMasterDetailApp extends Application {
 
                 long ownerId = sessionService.getCurrentUser().getUserId();
 
+
                 attachmentManager.linkFile(
                         selectedFile.getId(),
                         input.targetType(),
@@ -299,7 +340,9 @@ public class FileMasterDetailApp extends Application {
                         ownerId
                 );
 
-                showInfo("Связь добавлена. Нажмите Refresh, чтобы обновить таблицу ссылок.");
+                refreshAll();
+
+                showInfo("Связь добавлена");
 
             } catch (NumberFormatException e) {
                 showError("Ошибка: ID объекта должен быть числом");
@@ -307,6 +350,7 @@ public class FileMasterDetailApp extends Application {
                 showError(e.getMessage());
             }
         });
+
     }
     private void unlinkSelectedLink() {
         AttachmentLink selectedLink = linkTable.getSelectionModel().getSelectedItem();
@@ -326,7 +370,9 @@ public class FileMasterDetailApp extends Application {
                     currentUserId
             );
 
-            showInfo("Связь удалена. Нажмите Refresh, чтобы обновить таблицу ссылок.");
+            refreshAll();
+
+            showInfo("Связь удалена");
 
         } catch (IllegalArgumentException e) {
             showError(e.getMessage());
@@ -431,9 +477,6 @@ public class FileMasterDetailApp extends Application {
             fileManager.loadFromDatabase();
             attachmentManager.loadFromDatabase();
 
-            System.out.println("FILES COUNT = " + fileManager.getAllFiles_noerrors().size());
-            System.out.println("LINKS COUNT = " + attachmentManager.getAllLinksForSave().size());
-
             fileTable.setItems(
                     FXCollections.observableArrayList(fileManager.getAllFiles_noerrors())
             );
@@ -441,6 +484,9 @@ public class FileMasterDetailApp extends Application {
             linkTable.setItems(
                     FXCollections.observableArrayList(attachmentManager.getAllLinksForSave())
             );
+
+            fileTable.refresh();
+            linkTable.refresh();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -473,11 +519,6 @@ public class FileMasterDetailApp extends Application {
     private void showFileDetails(FileMeta file) {
         if (file == null) {
             detailsArea.clear();
-            return;
-        }
-        if (file.getStatus()== FileStatus.DELETED){
-            detailsArea.clear();
-            fileTable.setItems(FXCollections.observableArrayList(fileManager.getAllFiles_noerrors()));
             return;
         }
 

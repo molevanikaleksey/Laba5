@@ -39,8 +39,9 @@ public class FileStorage {
         FileValidator.validate(snapShot);
 
         filleManager.replaceAllFiles(snapShot.getFiles());
+        attachmentManager.loadFromDatabase();
 
-        attachmentManager.replaceAllLinks(snapShot.getLinks());
+        //attachmentManager.replaceAllLinks(snapShot.getLinks());
     }
 
 }

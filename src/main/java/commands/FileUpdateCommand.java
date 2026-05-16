@@ -1,17 +1,23 @@
 package commands;
 import service.FilleManager;
+import service.SessionService;
 
 import java.util.Scanner;
 
 public class FileUpdateCommand implements Command{
     FilleManager manager;
     Scanner scanner;
-    public FileUpdateCommand(FilleManager filleManager, Scanner scanner){
+    SessionService sessionService;
+    public FileUpdateCommand(FilleManager filleManager, Scanner scanner, SessionService sessionService){
         this.manager = new FilleManager();
         this.scanner = new Scanner(System.in);
+        this.sessionService = sessionService;
     }
     @Override
     public void execute(String[] args) {
+        if (!sessionService.isAuthorized()) {
+            throw new IllegalStateException("Ошибка: сначала выполните login");
+        }
         if (args.length != 2) {
             throw new IllegalArgumentException("Ошибка: используйте file_update <file_id>");
         }

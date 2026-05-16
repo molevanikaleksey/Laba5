@@ -1,14 +1,20 @@
 package commands;
 import domain.AttachmentTargetType;
 import service.AttachmentManager;
+import service.SessionService;
 
 public class FileUnlinkCommand implements Command {
     AttachmentManager manager;
-    public FileUnlinkCommand(AttachmentManager manager){
+    SessionService sessionService;
+    public FileUnlinkCommand(AttachmentManager manager, SessionService sessionService){
         this.manager = new AttachmentManager();
+        this.sessionService = sessionService;
     }
     @Override
     public void execute(String[] args) {
+        if (!sessionService.isAuthorized()) {
+            throw new IllegalStateException("Ошибка: сначала выполните login");
+        }
         try {
             if (args.length != 4) {
                 throw new IllegalArgumentException("Ошибка: используйте file_unlink <file_id> <type> <id>");

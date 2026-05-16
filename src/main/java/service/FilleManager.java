@@ -14,6 +14,7 @@ import static service.AttachmentManager.attachmentLinks;
 
 public class FilleManager {
     public static final TreeMap<Long, FileMeta> files = new TreeMap<>();
+    SessionService sessionService;
     public TreeMap<Long, FileMeta> getTreeMap(){
         return files;
     }
@@ -31,7 +32,24 @@ public class FilleManager {
         fileMeta.setStatus(FileStatus.ACTIVE);
         files.put(id, fileMeta);
     }
+    public void addFile(String name, String mime, Long size, String describtion) {
+        FileMeta fileMeta = new FileMeta();
+        Long id = Generator.getFileNextId();
+        for (Long i : files.keySet()) {
+            if (id == i) {
+                throw new IllegalArgumentException("Объект с таким id уже существует");
+            }
+        }
 
+        fileMeta.setId(id);
+        fileMeta.setFileName(name);
+        fileMeta.setDescription(describtion);
+        fileMeta.setCreatedAt(Instant.now());
+        fileMeta.setStatus(FileStatus.ACTIVE);
+        fileMeta.setMimeType(mime);
+        fileMeta.setSizeBytes(size);
+        files.put(id, fileMeta);
+    }
     public FileMeta getFileById(long id) {
         FileMeta fileMeta = files.get(id);
         if (fileMeta == null) {
@@ -40,12 +58,13 @@ public class FilleManager {
         return fileMeta;
     }
 
-    public void setFilefields(long id, String describtion, String fileName, String owner, String mimeType, Long size){
+    public void setFilefields(long id, String describtion, String fileName, String mimeType, Long size){
         FileMeta fileMeta = getFileById(id);
         fileMeta.setUpdatedAt(Instant.now());
         fileMeta.setDescription(describtion);
         fileMeta.setFileName(fileName);
-        fileMeta.setOwnerUsername(owner);
+        long ownerId = SessionService.getCurrentUserId();
+        fileMeta.setOwnerId(ownerId);
         fileMeta.setMimeType(mimeType);
         fileMeta.setSizeBytes(size);
     }
@@ -53,13 +72,14 @@ public class FilleManager {
 
     public void updateFileDescription(long fileId, String description) {
         FileMeta fileMeta = getFileById(fileId);
-
+        checkOwner(fileMeta, sessionService.getCurrentUserId());
         fileMeta.setDescription(description);
         fileMeta.setUpdatedAt(Instant.now());
     }
 
     public void deleteFile(long id) {
         FileMeta fileMeta = getFileById(id);
+        checkOwner(fileMeta, sessionService.getCurrentUserId());
 
         if (fileMeta.getStatus() == FileStatus.DELETED) {
             throw new IllegalArgumentException("Ошибка: файл уже удалён");
@@ -68,7 +88,13 @@ public class FilleManager {
         fileMeta.setUpdatedAt(Instant.now());
     }
     public List<FileMeta> getAllFiles_noerrors(){
-        return new ArrayList<>(files.values());
+        List<FileMeta> result = new ArrayList<>();
+        for (FileMeta file : files.values()) {
+            if (file.getStatus() == FileStatus.ACTIVE) {
+                result.add(file);
+            }
+        }
+        return result;
     }
     public List<FileMeta> getAllFiles() {
         List<FileMeta> result = new ArrayList<>();
@@ -110,4 +136,22 @@ public class FilleManager {
 
         return result;
     }
+    public void replaceAllFiles(List<FileMeta> files) {
+        getTreeMap().clear();
+        long maxId = 0;
+        for (FileMeta file : files) {
+            getTreeMap().put(file.getId(), file);
+            if (file.getId() > maxId) {
+                maxId = file.getId();
+            }
+        }
+    }
+    private void checkOwner(FileMeta fileMeta, Long currentUserId) {
+        if (!fileMeta.getOwnerId().equals(currentUserId)) {
+            throw new IllegalArgumentException(
+                    "Ошибка: у вас нет прав на изменение этого объекта"
+            );
+        }
+    }
+
 }

@@ -76,4 +76,53 @@ public class AttachmentManager {
 
         attachmentLinks.remove(foundLinkId);
     }
+    public ArrayList<AttachmentLink> getAllLinksForSave(){
+        return new ArrayList<>(attachmentLinks.values());
+    }
+    public void replaceAllLinks(List<AttachmentLink> linksFromJson) {
+        attachmentLinks.clear();
+        for (AttachmentLink link : linksFromJson) {
+            attachmentLinks.put(link.getId(), link);
+        }
+    }
+    public String getLinkDetails(FileMeta link) {
+        if (link == null) {
+            throw new IllegalArgumentException("Ошибка: связь не выбрана");
+        }
+        AttachmentLink attachmentLink = new AttachmentLink();
+
+        return "AttachmentLink #" + attachmentLink.getId() + "\n\n" +
+                "fileId: " + attachmentLink.getFileId() + "\n" +
+                "targetType: " + attachmentLink.getTargetType() + "\n" +
+                "targetId: " + attachmentLink.getTargetId() + "\n" +
+                "owner: " + attachmentLink.getOwnerUsername() + "\n" +
+                "createdAt: " + attachmentLink.getCreatedAt();
+    }
+    public AttachmentLink linkFile(long fileId, AttachmentTargetType targetType, long targetId) {
+        if (fileId < 0) {
+            throw new IllegalArgumentException("Ошибка: file_id должен быть больше 0");
+        }
+
+        if (targetType == null) {
+            throw new IllegalArgumentException("Ошибка: тип объекта не может быть пустым");
+        }
+
+        if (targetId < 0) {
+            throw new IllegalArgumentException("Ошибка: ID объекта должен быть больше 0");
+        }
+
+        AttachmentLink link = new AttachmentLink(
+                Generator.getAttNextId(),
+                fileId,
+                targetType,
+                targetId,
+                "SYSTEM",
+                Instant.now(),
+                SessionService.getCurrentUserId()
+        );
+
+        attachmentLinks.put(link.getId(), link);
+
+        return link;
+    }
 }

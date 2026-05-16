@@ -16,13 +16,15 @@ public final class AttachmentLink {
     private String ownerUsername;
     // Когда прикрепили. Программа ставит автоматически.
     private Instant createdAt;
+    private Long ownerId;
 
-    public AttachmentLink(long id, long fileId, AttachmentTargetType targetType, long targetId, String ownerUsername, Instant createdAt) {
+    public AttachmentLink(long id, long fileId, AttachmentTargetType targetType, long targetId, String ownerUsername, Instant createdAt, Long userId) {
         this.setId(id);
         this.setFileId(fileId);
         this.setTargetType(targetType);
         this.setTargetId(targetId);
         this.setOwnerUsername(ownerUsername);
+        this.setOwnerUserId(userId);
         this.setCreatedAt(createdAt);
     }
 
@@ -76,6 +78,9 @@ public final class AttachmentLink {
         this.ownerUsername = ownerUsername;
     }
 
+    public void setOwnerUserId(Long ownerUsername) {
+        this.ownerId = ownerId;
+    }
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }

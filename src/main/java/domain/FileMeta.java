@@ -23,6 +23,8 @@ public final class FileMeta {
     // Когда обновляли. Программа обновляет автоматически.
     private Instant updatedAt;
     private String path;
+    private String OwnerName;
+    private Long OwnerId;
 
     public FileMeta(long id, String path,String fileName, String mimeType, long sizeBytes, String description, FileStatus status, String ownerUsername, Instant createdAt, Instant updatedAt) {
         this.id = id;
@@ -32,8 +34,8 @@ public final class FileMeta {
         this.description = description;
         this.status = status;
         this.ownerUsername = ownerUsername;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.createdAt = Instant.parse(createdAt.toString());
+        this.updatedAt = Instant.parse(updatedAt.toString());
         this.path = path;
     }
 
@@ -53,6 +55,22 @@ public final class FileMeta {
 
     public long getSizeBytes() {
         return sizeBytes;
+    }
+
+    public String getOwnerName() {
+        return OwnerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        OwnerName = ownerName;
+    }
+
+    public Long getOwnerId() {
+        return OwnerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        OwnerId = ownerId;
     }
 
     public String getPath(){
@@ -129,11 +147,11 @@ public final class FileMeta {
     }
 
     public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
+        this.createdAt = Instant.parse(createdAt.toString());
     }
 
     public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
+        this.updatedAt = Instant.parse(updatedAt.toString());
     }
 
     @Override

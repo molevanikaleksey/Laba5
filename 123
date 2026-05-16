@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "id": 0,
+      "fileName": "dfv",
+      "sizeBytes": 0,
+      "description": "df",
+      "status": "ACTIVE",
+      "createdAt": "2026-05-15T20:53:38.711680Z",
+      "updatedAt": "2026-05-15T20:53:38.714542Z",
+      "path": "dfs"
+    }
+  ],
+  "links": []
+}
